@@ -12,10 +12,6 @@ console.log('Server Started.');
 
 // Set up lists
 var SOCKET_LIST = {};
-var GAME_LIST = {};
-
-// Game Constructor
-
 
 // Player Constructor
 var Player = function(id) {
@@ -58,6 +54,24 @@ Player.update = function() {
 
 	return pack;
 }
+
+// Game Constructor
+var Game = function(id) {
+	var self = {
+		id: id,
+		players: [],
+		chips: []
+	}
+
+	self.update = function() {
+		self.x++;
+		self.y++;
+	}
+
+	Game.list[id] = self;
+	return self;
+}
+Game.list = {};
 
 // Set up the sockets
 var io = require('socket.io')(serv, {});
