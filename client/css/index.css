@@ -1,0 +1,13 @@
+div#gameDiv {
+	width: 500px;
+	height: 500px;
+	float: left;
+	display:none;
+}
+
+canvas {
+	position: absolute;
+	border-radius: 1px;
+	border-color: #000000;
+	border-style: solid;
+}

@@ -4,10 +4,33 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multiplayer Game</title>
+	<link rel="stylesheet" href="client/css/index.css">
 </head>
 
 <body>
-	<canvas id="ctx" width="500" height="500" style="border:1px solid #000000;"></canvas>
+	<!------------------ Sign In ------------------>
+	<div id="joinDiv">
+		<div>
+			<button id="create-btn" style="width: 150px; margin-bottom: 10px;">Create Game</button>
+		</div>
+		<div>
+			<button id="join-btn" style="width: 150px;">Join Game</button>
+			<input id="join-input" type="text" />
+		</div>	
+	</div>
+
+	<!------------------- Game -------------------->
+	<div id="gameDiv">
+		<canvas id="ctx-board" width="500" height="500"></canvas>
+		<canvas id="ctx" width="500" height="500"></canvas>
+		<!-- Chat Box -->
+		<div id="chat-text" style="margin-top: 508px;width:500px;height:100px;overflow-y:scroll">
+			<div>Hello!</div>
+		</div>
+		<form id="chat-form">
+			<input id="chat-in" type="text" style="width:500px"></input>
+		</form>
+	</div>
 
 	<!-- Sockets -->
 	<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
