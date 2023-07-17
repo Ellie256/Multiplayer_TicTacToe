@@ -9,7 +9,7 @@ app.get('/', function(req, res) {
 });
 app.use('/client', express.static(__dirname + '/client'));
 serv.listen(process.env.PORT || 2000);
-// console.log('Server Started.');
+console.log('Server Started.');
 
 /************** Objects *****************/
 /************* Player ******************/
@@ -200,6 +200,11 @@ var Game = function(param) {
             self.winner = 'Tie'
 	}
 
+	self.reset = function() {
+		self.winner = null;
+		self.board_state = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+	}
+
 	Game.list[self.id] = self;
 	initPack.game.push(self.getInitPack());
 	return self;
@@ -246,7 +251,7 @@ var addGame = function(data) {
 	});
 }
 
-var DEBUG = false;
+var DEBUG = true;
 
 // Set up the sockets
 var io = require('socket.io')(serv, {});
@@ -277,6 +282,20 @@ io.sockets.on('connection', function(socket) {
 			SOCKET_LIST[Game.list[data.gameId].p1].emit('addP2', {p2: socket.id})
 			socket.emit('joinGameResponse', {success:true});
 		}
+	});
+
+	socket.on('resetGame', function(data) {
+		var g = Game.list[data.gameId];
+		g.reset();
+		socket.emit('resetGameResponse');
+		
+		if (Player.list[socket.id].chip === 'x') {
+			SOCKET_LIST[g.p2].emit('resetGameResponse');
+		}
+		else {
+			SOCKET_LIST[g.p1].emit('resetGameResponse');
+		}
+
 	});
 
 	socket.on('disconnect', function() {

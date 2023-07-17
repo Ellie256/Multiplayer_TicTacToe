@@ -7,6 +7,7 @@ var joinForm = document.getElementById('join-form');
 var gameDiv = document.getElementById('gameDiv');
 var gameIdP = document.getElementById('gameId-p');
 var turnP = document.getElementById('turn-p');
+var resetBtn = document.getElementById('reset-btn');
 
 
 // Connect to the socket.io server
@@ -43,6 +44,11 @@ var Game = function(initPack) {
 	self.board_state = initPack.board_state;
 
 	self.draw = function() {}
+
+	self.reset = function() {
+		self.winner = null;
+		self.board_state = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+	}
 
 	Game.list[self.id] = self;
 	return self;
@@ -126,6 +132,14 @@ socket.on('addP2', function(data) {
 	Game.list[gameId].p2 = data.p2;
 });
 
+// Reset the game
+resetBtn.onclick = function() {
+	socket.emit('resetGame', {gameId: gameId});
+}
+socket.on('resetGameResponse', function() {
+	Game.list[gameId].reset();
+});
+
 function drawBoard() {
 	ctxBoard.fillStyle = 'black';
 	// Line 1
@@ -153,7 +167,6 @@ function drawBoard() {
 	// 3 4 5
 	// 6 7 8
 }
-
 var row1 = 125;
 var row2 = 265;
 var row3 = 405;
@@ -187,7 +200,6 @@ setInterval(function() {
 		}
 	}
 }, 40);
-
 
 // Get mouse events
 document.onmousedown = function(event) {
@@ -272,7 +284,6 @@ socket.on('createGameResponse', function(data) {
 		alert("Create Game Unsuccessful");
 	}
 });
-
 
 /***************** Chat Box *******************/
 // Get Chat box
