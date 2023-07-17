@@ -1,8 +1,24 @@
 div#gameDiv {
+	width: 650px;
+	height: 800px;
+	display:none;
+}
+
+div#canvasDiv {
 	width: 500px;
 	height: 500px;
-	float: left;
-	display:none;
+	display: inline;
+}
+
+div#chat-text {
+	margin-top: 510px;
+	width: 500px;
+	height: 100px;
+	overflow-y: scroll;
+}
+
+div#turn-text {
+	margin-top: 20px;
 }
 
 canvas {

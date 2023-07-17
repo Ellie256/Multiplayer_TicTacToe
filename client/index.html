@@ -13,18 +13,32 @@
 		<div>
 			<button id="create-btn" style="width: 150px; margin-bottom: 10px;">Create Game</button>
 		</div>
-		<div>
-			<button id="join-btn" style="width: 150px;">Join Game</button>
-			<input id="join-input" type="text" />
+		<div style="display:flex; width:500px; height: 22px;">
+			<button id="join-btn" style="width: 150px; ">Join Game</button>
+			<form id="join-form" style="width: 150px;">
+				<input id="join-input" type="text" style="width:150px; margin-left: 10px;"/>
+			</form>
 		</div>	
 	</div>
 
 	<!------------------- Game -------------------->
 	<div id="gameDiv">
-		<canvas id="ctx-board" width="500" height="500"></canvas>
-		<canvas id="ctx" width="500" height="500"></canvas>
+		<div id="canvasDiv">
+			<canvas id="ctx-board" width="500" height="500"></canvas>
+			<canvas id="ctx" width="500" height="500"></canvas>
+		</div>
+		<div style="float:right">
+			<!-- Game ID -->
+			<div id="gameId-text">
+				<p id="gameId-p"></p>
+			</div>
+			<!-- Whose Turn -->
+			<div id="turn-text">
+				<p id="turn-p"></p>
+			</div>
+		</div>
 		<!-- Chat Box -->
-		<div id="chat-text" style="margin-top: 508px;width:500px;height:100px;overflow-y:scroll">
+		<div id="chat-text">
 			<div>Hello!</div>
 		</div>
 		<form id="chat-form">

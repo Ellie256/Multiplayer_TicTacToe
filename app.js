@@ -17,6 +17,7 @@ console.log('Server Started.');
 var Player = function(param) {
 	var self = {
 		id: "",
+		gameId: "",
 		chip: '',
 		myTurn: false
 	}
@@ -24,10 +25,28 @@ var Player = function(param) {
 	if(param) {
 		if(param.id)
 			self.id = param.id;
+		if(param.gameId)
+			self.gameId = param.gameId;
 		if(param.chip)
 			self.chip = param.chip;
 		if(param.myTurn)
 			self.myTurn = param.myTurn;
+	}
+
+	self.getInitPack = function() {
+		return {
+			id: self.id,
+			gameId: self.gameId,
+			chip: self.chip,
+			myTurn: self.myTurn
+		};
+	}
+
+	self.getUpdatePack = function() {
+		return {
+			id: self.id,
+			myTurn: self.myTurn
+		};
 	}
 
 	self.update = function() {
@@ -36,34 +55,80 @@ var Player = function(param) {
 	}
 
 	Player.list[self.id] = self;
+	initPack.player.push(self.getInitPack());
 	return self;
 }
 Player.list = {};
 
-Player.onConnect = function(socket, chip, myTurn) {
-	Player({
-		id: socket.id,
-		chip: chip,
-		myTurn: myTurn
+Player.onConnect = function(socket, param) {
+	var player = Player(param);
+
+	// Listen for keypress event
+	socket.on('keyPress', function(data) {
+		if (!player.myTurn || Game.list[player.gameId].p2 === null || Game.list[player.gameId].winner !== null)
+			return;
+		else if (Game.list[player.gameId].board_state[data.state] !== 0)
+			return;
+		else {
+			var g = Game.list[player.gameId];
+			if (player.chip === 'x') {
+				g.board_state[data.state] = 1;
+				Player.list[g.p2].myTurn = true;
+			}
+			else {
+				g.board_state[data.state] = -1;
+				Player.list[g.p1].myTurn = true;
+			}
+			
+			player.myTurn = false;
+		}
 	});
+
+	socket.emit('init', {
+		selfId: socket.id,
+		player: Player.getAllInitPack(),
+		game: Game.getAllInitPack()
+	})
+}
+
+Player.getAllInitPack = function() {
+	var players = [];
+	for(var i in Player.list) {
+		players.push(Player.list[i].getInitPack());
+	}
+	return players;
 }
 
 Player.onDisconnect = function(socket) {
+	var p = Player.list[socket.id];
+	if(!p)
+		return;
+
+	var gameId = p.gameId;
+	var p2 = '';
+	if(p.chip === 'x')
+		p2 = Game.list[gameId].p2;
+	else
+		p2 = Game.list[gameId].p1;
+	
+	removePack.game.push(gameId);
+	removePack.player.push(socket.id);
+	removePack.player.push(p2);
 	delete Player.list[socket.id];
+	delete Player.list[p2];
+	delete Game.list[gameId];
 }
 
 Player.update = function() {
 	var pack = [];
-	for (var i in Player.list) {
+	// Loop through players to update
+	for(var i in Player.list) {
+		// update x and y
 		var player = Player.list[i];
 		player.update();
-		pack.push({
-			x: player.x,
-			y: player.y,
-			number: player.number
-		});
+		// add to package
+		pack.push(player.getUpdatePack());
 	}
-
 	return pack;
 }
 
@@ -74,7 +139,7 @@ var Game = function(param) {
 		id: "",
 		p1: null,
 		p2: null,
-		winner: "",
+		winner: null,
 		board_state: [0, 0, 0, 0, 0, 0, 0, 0, 0]
 	}
 
@@ -87,9 +152,26 @@ var Game = function(param) {
 			self.p2 = param.p2;
 	}
 
+	self.getInitPack = function() {
+		return {
+			id: self.id,
+			p1: self.p1,
+			p2: self.p2,
+			winner: self.winner,
+			board_state: self.board_state
+		};
+	}
+
+	self.getUpdatePack = function() {
+		return {
+			id: self.id,
+			winner: self.winner,
+			board_state: self.board_state
+		};
+	}
+
 	self.update = function() {
-		// self.x++;
-		// self.y++;
+		self.checkWin();
 	}
 
 	self.checkWin = function() {
@@ -110,18 +192,40 @@ var Game = function(param) {
             self.winner = 'P2'
         
         counter = 0
-        for (var i in self.board_state.length) {
-			if (self.board_state[i] != 0)
+        for (var i = 0; i < 9; i++) {
+			if (self.board_state[i] !== 0)
                 counter += 1
 		}
-        if (counter == 9 && self.winner == '')
+        if (counter === 9 && self.winner === null)
             self.winner = 'Tie'
 	}
 
 	Game.list[self.id] = self;
+	initPack.game.push(self.getInitPack());
 	return self;
 }
 Game.list = {};
+
+Game.getAllInitPack = function() {
+	var games = [];
+	for(var i in Game.list) {
+		games.push(Game.list[i].getInitPack());
+	}
+	return games;
+}
+
+Game.update = function() {
+	var pack = [];
+	// Loop through players to update
+	for(var i in Game.list) {
+		// update x and y
+		var game = Game.list[i];
+		game.update();
+		// add to package
+		pack.push(game.getUpdatePack());
+	}
+	return pack;
+}
 
 
 var SOCKET_LIST = {};
@@ -154,8 +258,9 @@ io.sockets.on('connection', function(socket) {
 		var gameId = "" + Math.floor(10000 * Math.random())
 		while(doesGameExist({gameId: gameId}))
 			gameId = "" + Math.floor(10000 * Math.random())
-		Player.onConnect(socket, 'x', true);
-		addGame({gameId: gameId, name:socket.id});
+		
+		addGame({gameId:gameId, name:socket.id});
+		Player.onConnect(socket, {id:socket.id,chip:'x',myTurn:true,gameId:gameId});
 		socket.emit('createGameResponse', {success:true});
 	});
 
@@ -167,15 +272,16 @@ io.sockets.on('connection', function(socket) {
 			socket.emit('joinGameResponse', {success:false, msg: "Game is full"});
 		}
 		else {
-			Player.onConnect(socket, 'o', false);
 			Game.list[data.gameId].p2 = socket.id;
+			Player.onConnect(socket, {id:socket.id,chip:'o',myTurn:false,gameId:data.gameId});
+			SOCKET_LIST[Game.list[data.gameId].p1].emit('addP2', {p2: socket.id})
 			socket.emit('joinGameResponse', {success:true});
 		}
 	});
 
 	socket.on('disconnect', function() {
-		delete SOCKET_LIST[socket.id];
 		Player.onDisconnect(socket);
+		delete SOCKET_LIST[socket.id];
 	});
 
 	socket.on('sendMsgToServer', function(data) {
@@ -195,18 +301,25 @@ io.sockets.on('connection', function(socket) {
 
 });
 
-
+var initPack = {player:[], game:[]};
+var removePack = {player:[], game:[]};
 // Update x and y every 40 ms
 setInterval(function() {
-	var pack = Player.update();
+	var pack = {
+		player: Player.update(),
+		game: Game.update()
+	}
 
 	for (var i in SOCKET_LIST) {
 		var socket = SOCKET_LIST[i];
-		socket.emit('newPositions', pack);
+		socket.emit('init', initPack);
+		socket.emit('update', pack);
+		socket.emit('remove', removePack);
 	}
 
+	initPack.player = [];
+	initPack.game = [];
+	removePack.player = [];
+	removePack.game = [];
 	
 }, 40);
-
-// Generate GameID
-const guid = () => "" + Math.floor(999 * Math.random());
