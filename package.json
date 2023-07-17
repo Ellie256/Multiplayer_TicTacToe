@@ -8,7 +8,7 @@
     "socket.io": "^4.6.1"
   },
   "engines": {
-	"node": "4.17.x"
+	"node": "14.17.x"
   },
   "devDependencies": {},
   "scripts": {
