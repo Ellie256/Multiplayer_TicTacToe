@@ -9,7 +9,7 @@ app.get('/', function(req, res) {
 });
 app.use('/client', express.static(__dirname + '/client'));
 serv.listen(process.env.PORT || 2000);
-console.log('Server Started.');
+// console.log('Server Started.');
 
 /************** Objects *****************/
 /************* Player ******************/
@@ -246,7 +246,7 @@ var addGame = function(data) {
 	});
 }
 
-var DEBUG = true;
+var DEBUG = false;
 
 // Set up the sockets
 var io = require('socket.io')(serv, {});
