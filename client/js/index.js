@@ -7,6 +7,8 @@ var joinForm = document.getElementById('join-form');
 var gameDiv = document.getElementById('gameDiv');
 var gameIdP = document.getElementById('gameId-p');
 var turnP = document.getElementById('turn-p');
+var playerP = document.getElementById('player-p');
+var opponentP = document.getElementById('opponent-p');
 var resetBtn = document.getElementById('reset-btn');
 
 
@@ -27,6 +29,7 @@ var Player = function(initPack) {
 	self.chip = initPack.chip;
 	self.gameId = initPack.gameId;
 	self.myTurn = initPack.myTurn;
+	self.score = initPack.score;
 
 	self.draw = function() {}
 
@@ -79,6 +82,8 @@ socket.on('update', function(data) {
 		if(p) {
 			if(pack.myTurn !== undefined)
 				p.myTurn = pack.myTurn;
+			if(pack.score !== undefined)
+				p.score = pack.score;
 		}
 	}
 	for(var i = 0; i < data.game.length; i++) {
@@ -104,6 +109,14 @@ socket.on('update', function(data) {
 				turnP.innerHTML = "You win!";
 			else
 				turnP.innerHTML = "You lose!";
+		}
+
+		if (Game.list[gameId].p2 !== null) {
+			playerP.innerHTML = "Your wins: " + Player.list[selfId].score;
+			if (Player.list[selfId].chip === 'x') 
+				opponentP.innerHTML = "Opponent wins: " + Player.list[Game.list[gameId].p2].score;
+			else
+				opponentP.innerHTML = "Opponent wins: " + Player.list[Game.list[gameId].p1].score;
 		}
 	}
 	

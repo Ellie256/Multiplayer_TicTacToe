@@ -9,7 +9,7 @@ app.get('/', function(req, res) {
 });
 app.use('/client', express.static(__dirname + '/client'));
 serv.listen(process.env.PORT || 2000);
-console.log('Server Started.');
+// console.log('Server Started.');
 
 /************** Objects *****************/
 /************* Player ******************/
@@ -19,6 +19,7 @@ var Player = function(param) {
 		id: "",
 		gameId: "",
 		chip: '',
+		score: 0,
 		myTurn: false
 	}
 
@@ -38,6 +39,7 @@ var Player = function(param) {
 			id: self.id,
 			gameId: self.gameId,
 			chip: self.chip,
+			score: self.score,
 			myTurn: self.myTurn
 		};
 	}
@@ -45,7 +47,8 @@ var Player = function(param) {
 	self.getUpdatePack = function() {
 		return {
 			id: self.id,
-			myTurn: self.myTurn
+			myTurn: self.myTurn,
+			score: self.score
 		};
 	}
 
@@ -175,6 +178,8 @@ var Game = function(param) {
 	}
 
 	self.checkWin = function() {
+		if (self.winner !== null)
+			return;
 		// 0 1 2
         // 3 4 5
         // 6 7 8
@@ -186,17 +191,21 @@ var Game = function(param) {
         col3 = self.board_state[2] + self.board_state[5] + self.board_state[8]
         dia1 = self.board_state[0] + self.board_state[4] + self.board_state[8]
         dia2 = self.board_state[2] + self.board_state[4] + self.board_state[6]
-        if (row1 === 3 || row2 === 3 || row3 === 3 || col1 === 3 || col2 === 3 || col3 === 3 || dia1 === 3 || dia2 === 3)
-            self.winner = 'P1'
-        else if (row1 === -3 || row2 === -3 || row3 === -3 || col1 === -3 || col2 === -3 || col3 === -3 || dia1 === -3 || dia2 === -3)
-            self.winner = 'P2'
+        if (row1 === 3 || row2 === 3 || row3 === 3 || col1 === 3 || col2 === 3 || col3 === 3 || dia1 === 3 || dia2 === 3) {
+            self.winner = 'P1';
+			Player.list[self.p1].score += 1;
+		}
+        else if (row1 === -3 || row2 === -3 || row3 === -3 || col1 === -3 || col2 === -3 || col3 === -3 || dia1 === -3 || dia2 === -3) {
+            self.winner = 'P2';
+			Player.list[self.p2].score += 1;
+		}
         
         counter = 0
         for (var i = 0; i < 9; i++) {
 			if (self.board_state[i] !== 0)
                 counter += 1
 		}
-        if (counter === 9 && self.winner === null)
+        if (counter === 9)
             self.winner = 'Tie'
 	}
 
@@ -251,7 +260,7 @@ var addGame = function(data) {
 	});
 }
 
-var DEBUG = true;
+var DEBUG = false;
 
 // Set up the sockets
 var io = require('socket.io')(serv, {});
